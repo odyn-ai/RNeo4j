@@ -5,7 +5,7 @@
 #' @param query A character string.
 #' @param ... A named list. Optional parameters to pass to the query in the form key = value, if applicable.
 #' 
-#' @return \code{newTransaction} returns a transaction object. Both \code{appendCypher} and \code{commit} return \code{NULL}.
+#' @return \code{newTransaction} returns a transaction object. Both \code{appendCypher} and \code{commit} return \code{NULL}. \code{appendCypherToDF} returns a \code{data.frame}
 #' 
 #' @examples 
 #' \dontrun{
@@ -36,6 +36,9 @@
 #'                dest_name = dest_name, 
 #'                flight_num = flight_num)
 #' }
+#'
+#' r <- cypherToDF(t, "MATCH (o:Airport)<-[:ORIGIN]-(f:Flight)-[:DESTINATION]->(d:Airport)
+#'                 RETURN o.name, f.number, d.name")
 #' 
 #' commit(t)
 #' 

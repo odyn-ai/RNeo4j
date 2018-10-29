@@ -82,3 +82,44 @@ test_that("appendCypher works with a list of parameters", {
   
   expect_equal(actual, expected)
 })
+
+clear(neo4j, input=F)
+
+test_that("appendCypherToDF works", {
+  actual = data.frame(Origin = c("SFO", "AUS", "MCI"),
+                      FlightNum = c(1, 2, 3),
+                      Destination = c("PDX", "MCI", "LGA"))
+
+  query = "
+  MERGE (origin:Airport {name:{origin_name}})
+  MERGE (destination:Airport {name:{dest_name}})
+  CREATE (origin)<-[:ORIGIN]-(:Flight {number:{flight_num}})-[:DESTINATION]->(destination)
+  "
+
+  t = newTransaction(neo4j)
+
+  for (i in 1:nrow(actual)) {
+    origin_name = actual[i, ]$Origin
+    dest_name = actual[i, ]$Dest
+    flight_num = actual[i, ]$FlightNum
+
+    appendCypher(t,
+                 query,
+                 list(origin_name = origin_name,
+                 dest_name = dest_name,
+                 flight_num = flight_num))
+  }
+
+
+  q = "
+  MATCH (o:Airport)<-[:ORIGIN]-(f:Flight)-[:DESTINATION]->(d:Airport)
+  RETURN o.name AS Origin, f.number AS FlightNum, d.name AS Destination
+  ORDER BY FlightNum
+  "
+
+  expected = appendCypherToDF(t, q)
+
+  commit(t)
+
+  expect_equal(actual, expected)
+})
